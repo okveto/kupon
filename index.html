@@ -3,62 +3,56 @@
 <head>
   <title>Kupon Kullan</title>
   <meta charset="UTF-8">
-  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body>
   <h2 id="status">Kod kontrol ediliyor...</h2>
   <button id="useButton" style="display:none; font-size:18px;">✅ KULLAN ve YOK ET</button>
 
   <script>
-    // Firebase ayarların
-    const firebaseConfig = {
+    // Firebase config
+    var firebaseConfig = {
       apiKey: "AIzaSyCkF3WOKAj0dtZanC1pAMrnkL9iZe5Y8o",
       authDomain: "okveto-kupon.firebaseapp.com",
       projectId: "okveto-kupon",
-      storageBucket: "okveto-kupon.appspot.com",
-      messagingSenderId: "601390735010",
-      appId: "1:601390735010:web:5292726f9cab96e87b01fb",
-      measurementId: "G-865WQ8G56"
     };
-
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    var db = firebase.firestore();
 
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
+    var params = new URLSearchParams(window.location.search);
+    var code = params.get("code");
 
-    const status = document.getElementById("status");
-    const button = document.getElementById("useButton");
+    var status = document.getElementById("status");
+    var button = document.getElementById("useButton");
 
     if (!code) {
       status.innerText = "❌ Kod belirtilmedi.";
     } else {
-      const docRef = db.collection("tickets").doc(code);
+      var docRef = db.collection("tickets").doc(code);
 
-      docRef.get().then((doc) => {
+      docRef.get().then(function(doc) {
         if (!doc.exists) {
           status.innerText = "❌ Geçersiz kupon kodu.";
-        } else if (doc.data().used) {
+        } else if (doc.data().used === true) {
           status.innerText = "⚠️ Bu kupon zaten kullanılmış.";
         } else {
           status.innerText = `🎉 Kupon geçerli: ${code}`;
           button.style.display = "inline-block";
 
-          button.onclick = () => {
-            const confirmUse = confirm("Bu bileti kullanmak istediğinize emin misiniz?\nBu işlem geri alınamaz.");
-            if (confirmUse) {
+          button.onclick = function() {
+            if (confirm("Bu bileti kullanmak istediğinize emin misiniz?\nBu işlem geri alınamaz.")) {
               docRef.update({
                 used: true,
                 usedAt: new Date().toISOString()
-              }).then(() => {
+              }).then(function() {
                 status.innerText = "✅ Kupon başarıyla kullanıldı!";
                 button.style.display = "none";
               });
             }
           };
         }
-      }).catch((error) => {
+      }).catch(function(error) {
         console.error("Hata:", error);
         status.innerText = "⚠️ Firebase bağlantısında hata oluştu.";
       });
