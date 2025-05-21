@@ -1,36 +1,41 @@
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCkIF3WOKAj0dtZanCIpAMrnkL9iZe5Y8o",
-    authDomain: "okveto-kupon.firebaseapp.com",
-    projectId: "okveto-kupon"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  async function useCoupon() {
-    const code = document.getElementById("codeInput").value;
-    const couponRef = doc(db, "coupons", code);
-    const couponSnap = await getDoc(couponRef);
-
-    if (!couponSnap.exists()) {
-      document.getElementById("result").innerText = "❌ Geçersiz kupon kodu.";
-      return;
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Dijital Kupon Sistemi</title>
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="script.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      text-align: center;
+      padding: 50px;
     }
-
-    const data = couponSnap.data();
-
-    if (data.used === true) {
-      document.getElementById("result").innerText = "⚠️ Bu kupon daha önce kullanılmış.";
-    } else {
-      await updateDoc(couponRef, {
-        used: true,
-        usedAt: new Date().toISOString()
-      });
-      document.getElementById("result").innerText = "✅ Kupon başarıyla kullanıldı!";
+    h1 {
+      color: #333;
     }
-  }
-</script>
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎟 Kupon Kullanım Sayfası</h1>
+
+  <p>Lütfen sahip olduğunuz kupon kodunu girin ve <strong>kullan</strong> butonuna tıklayın.</p>
+
+  <input type="text" id="couponCode" placeholder="Örn: kupon123" />
+  <br>
+  <button onclick="window.useCoupon()">Kuponu Kullan</button>
+
+  <p id="status"></p>
+</body>
+</html>
