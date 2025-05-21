@@ -1,52 +1,36 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Kupon Kontrol Sayfası - OKVETO</title>
-</head>
-<body>
-  <h2>Kupon Kullanımı</h2>
-  <input type="text" id="codeInput" placeholder="Kupon kodunu girin">
-  <button onclick="useCoupon()">Kuponu Kullan</button>
-  <p id="result"></p>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js";
 
-  <script type="module">
-    // Firebase modülleri
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyCkIF3WOKAj0dtZanCIpAMrnkL9iZe5Y8o",
+    authDomain: "okveto-kupon.firebaseapp.com",
+    projectId: "okveto-kupon"
+  };
 
-    // Firebase yapılandırman (bunu kendininkilerle doldur)
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID"
-    };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  async function useCoupon() {
+    const code = document.getElementById("codeInput").value;
+    const couponRef = doc(db, "coupons", code);
+    const couponSnap = await getDoc(couponRef);
 
-    // Kuponu kontrol etme ve kullanma
-    async function useCoupon() {
-      const code = document.getElementById("codeInput").value;
-      const couponRef = doc(db, "coupons", code);
-      const couponSnap = await getDoc(couponRef);
-
-      if (!couponSnap.exists()) {
-        document.getElementById("result").innerText = "❌ Geçersiz kupon kodu.";
-        return;
-      }
-
-      const data = couponSnap.data();
-
-      if (data.used === true) {
-        document.getElementById("result").innerText = "⚠️ Bu kupon daha önce kullanılmış.";
-      } else {
-        await updateDoc(couponRef, {
-          used: true,
-          usedAt: new Date().toISOString()
-        });
-        document.getElementById("result").innerText = "✅ Kupon başarıyla kullanıldı!";
-      }
+    if (!couponSnap.exists()) {
+      document.getElementById("result").innerText = "❌ Geçersiz kupon kodu.";
+      return;
     }
-  </script>
-</body>
-</html>
+
+    const data = couponSnap.data();
+
+    if (data.used === true) {
+      document.getElementById("result").innerText = "⚠️ Bu kupon daha önce kullanılmış.";
+    } else {
+      await updateDoc(couponRef, {
+        used: true,
+        usedAt: new Date().toISOString()
+      });
+      document.getElementById("result").innerText = "✅ Kupon başarıyla kullanıldı!";
+    }
+  }
+</script>
