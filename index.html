@@ -1,61 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Kupon Kullan</title>
-  <meta charset="UTF-8">
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <title>Kupon Kontrol Sayfası - OKVETO</title>
 </head>
 <body>
-  <h2 id="status">Kod kontrol ediliyor...</h2>
-  <button id="useButton" style="display:none; font-size:18px;">✅ KULLAN ve YOK ET</button>
+  <h2>Kupon Kullanımı</h2>
+  <input type="text" id="codeInput" placeholder="Kupon kodunu girin">
+  <button onclick="useCoupon()">Kuponu Kullan</button>
+  <p id="result"></p>
 
-  <script>
-    // Firebase config
-    var firebaseConfig = {
-      apiKey: "AIzaSyCkF3WOKAj0dtZanC1pAMrnkL9iZe5Y8o",
-      authDomain: "okveto-kupon.firebaseapp.com",
-      projectId: "okveto-kupon",
+  <script type="module">
+    // Firebase modülleri
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+
+    // Firebase yapılandırman (bunu kendininkilerle doldur)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID"
     };
-    firebase.initializeApp(firebaseConfig);
-    var db = firebase.firestore();
 
-    var params = new URLSearchParams(window.location.search);
-    var code = params.get("code");
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    var status = document.getElementById("status");
-    var button = document.getElementById("useButton");
+    // Kuponu kontrol etme ve kullanma
+    async function useCoupon() {
+      const code = document.getElementById("codeInput").value;
+      const couponRef = doc(db, "coupons", code);
+      const couponSnap = await getDoc(couponRef);
 
-    if (!code) {
-      status.innerText = "❌ Kod belirtilmedi.";
-    } else {
-      var docRef = db.collection("tickets").doc(code);
+      if (!couponSnap.exists()) {
+        document.getElementById("result").innerText = "❌ Geçersiz kupon kodu.";
+        return;
+      }
 
-      docRef.get().then(function(doc) {
-        if (!doc.exists) {
-          status.innerText = "❌ Geçersiz kupon kodu.";
-        } else if (doc.data().used === true) {
-          status.innerText = "⚠️ Bu kupon zaten kullanılmış.";
-        } else {
-          status.innerText = `🎉 Kupon geçerli: ${code}`;
-          button.style.display = "inline-block";
+      const data = couponSnap.data();
 
-          button.onclick = function() {
-            if (confirm("Bu bileti kullanmak istediğinize emin misiniz?\nBu işlem geri alınamaz.")) {
-              docRef.update({
-                used: true,
-                usedAt: new Date().toISOString()
-              }).then(function() {
-                status.innerText = "✅ Kupon başarıyla kullanıldı!";
-                button.style.display = "none";
-              });
-            }
-          };
-        }
-      }).catch(function(error) {
-        console.error("Hata:", error);
-        status.innerText = "⚠️ Firebase bağlantısında hata oluştu.";
-      });
+      if (data.used === true) {
+        document.getElementById("result").innerText = "⚠️ Bu kupon daha önce kullanılmış.";
+      } else {
+        await updateDoc(couponRef, {
+          used: true,
+          usedAt: new Date().toISOString()
+        });
+        document.getElementById("result").innerText = "✅ Kupon başarıyla kullanıldı!";
+      }
     }
   </script>
 </body>
